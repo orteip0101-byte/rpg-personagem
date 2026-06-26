@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Criação de Personagem</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Josefin+Sans:wght@300;400;600&display=swap');
+
+:root {
+  --bg: #080808;
+  --bg1: #0f0f0f;
+  --bg2: #161616;
+  --bg3: #1e1e1e;
+  --border: #2a2a2a;
+  --border2: #383838;
+  --text: #e8e8e8;
+  --text2: #888;
+  --text3: #555;
+  --accent: #c0a060;
+  --accent2: #8a6a30;
+  --red: #8b2020;
+  --red2: #b03030;
+  --green: #1a6040;
+  --blue: #1a3060;
+  --purple: #3a2060;
+  --r: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; min-height: 100vh; line-height: 1.6; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── HEADER ── */
+.hdr {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(8,8,8,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.hdr-title { font-family: 'Josefin Sans', sans-serif; font-size: 0.9rem; letter-spacing: 0.2em; font-weight: 600; color: var(--accent); text-transform: uppercase; }
+.hdr-right { display: flex; align-items: center; gap: 12px; }
+.sync-row { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; color: var(--text3); letter-spacing: 0.08em; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); transition: background 0.3s; }
+.sync-dot.ok { background: #2d8a50; }
+.sync-dot.busy { background: var(--accent); animation: blink 1s infinite; }
+.sync-dot.err { background: var(--red2); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── MODAL ── */
+.overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+  z-index: 900; align-items: center; justify-content: center; padding: 1rem;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 2rem; width: 100%; max-width: 340px;
+  animation: fadeUp 0.2s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+.modal h3 { font-family: 'Josefin Sans', sans-serif; font-size: 0.85rem; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.4rem; text-transform: uppercase; }
+.modal p { font-size: 0.8rem; color: var(--text2); margin-bottom: 1.25rem; }
+.modal-input {
+  width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r); color: var(--text); font-family: inherit; font-size: 0.9rem;
+  margin-bottom: 0.75rem; outline: none; transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--accent2); }
+.modal-err { font-size: 0.75rem; color: var(--red2); margin-bottom: 0.6rem; display: none; }
+.modal-btns { display: flex; gap: 8px; }
+
+/* ── BTN ── */
+.btn {
+  padding: 8px 16px; border-radius: var(--r); font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  border: 1px solid var(--border2); background: transparent; color: var(--text2);
+  transition: all 0.15s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--border2); background: var(--bg3); color: var(--text); }
+.btn:active { transform: scale(0.97); }
+.btn-acc { background: var(--accent2); border-color: var(--accent2); color: #f0e0c0; }
+.btn-acc:hover { background: var(--accent); border-color: var(--accent); color: #111; }
+.btn-red { background: var(--red); border-color: var(--red); color: #f0c0c0; }
+.btn-red:hover { background: var(--red2); border-color: var(--red2); }
+.btn-ghost { border-color: transparent; }
+.btn-sm { padding: 5px 10px; font-size: 0.65rem; }
+
+/* ── BODY ── */
+.body { max-width: 740px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+
+/* ── CARD ── */
+.card {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.5rem; margin-bottom: 1rem;
+  transition: border-color 0.2s;
+}
+.card:focus-within { border-color: var(--border2); }
+.card-head { margin-bottom: 1.25rem; }
+.card-title { font-family: 'Josefin Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.2rem; }
+.card-sub { font-size: 0.78rem; color: var(--text3); }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 0.9rem; }
+.label { display: block; font-size: 0.65rem; letter-spacing: 0.12em; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; }
+.inp, .textarea, .select {
+  width: 100%; padding: 8px 11px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-family: inherit; font-size: 0.88rem;
+  transition: border-color 0.2s; outline: none;
+}
+.inp:focus, .textarea:focus, .select:focus { border-color: var(--border2); background: var(--bg3); }
+.textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.inp::placeholder, .textarea::placeholder { color: var(--text3); font-weight: 300; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media(max-width:480px){ .grid2 { grid-template-columns: 1fr; } }
+
+/* ── COERÊNCIA EXPLAINER ── */
+.coer-explain {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 0.75rem 1rem; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text2); line-height: 1.6;
+}
+.coer-explain strong { color: var(--text); display: block; margin-bottom: 3px; font-size: 0.72rem; letter-spacing: 0.06em; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; background: var(--bg2); border-radius: var(--r); padding: 3px; margin-bottom: 1.25rem; border: 1px solid var(--border); }
+.tab { flex: 1; text-align: center; padding: 7px 4px; font-family: 'Josefin Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 3px; border: none; background: transparent; color: var(--text3); transition: all 0.2s; }
+.tab.active { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+.tab:hover:not(.active) { color: var(--text2); }
+.panel { display: none; animation: fadeIn 0.2s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* ── SLIDERS ── */
+.axis { margin-bottom: 1.1rem; }
+.axis-top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
+.axis-name { font-size: 0.78rem; font-weight: 500; color: var(--text); }
+.axis-desc { font-size: 0.7rem; color: var(--text3); }
+.axis-poles { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.04em; }
+.axis-label-live { font-size: 0.72rem; color: var(--accent); letter-spacing: 0.06em; font-family: 'Josefin Sans', sans-serif; min-height: 1.1em; margin-bottom: 3px; transition: all 0.15s; }
+.slider-row { display: flex; align-items: center; gap: 8px; }
+input[type=range] {
+  flex: 1; -webkit-appearance: none; appearance: none; height: 4px;
+  border-radius: 2px; background: var(--border2); outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 6px rgba(192,160,96,0.4);
+  cursor: pointer; transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); cursor: pointer; }
+.val-n { font-size: 0.65rem; color: var(--text3); min-width: 28px; text-align: right; }
+.div { height: 1px; background: var(--border); margin: 1rem 0; }
+.sec-lbl { font-size: 0.6rem; letter-spacing: 0.15em; color: var(--text3); text-transform: uppercase; margin-bottom: 0.75rem; }
+
+/* ── RADAR ── */
+.radar-wrap { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+.radar-leg { flex: 1; min-width: 140px; }
+.leg-item { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; font-size: 0.75rem; color: var(--text2); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.radar-note { margin-top: 1rem; font-size: 0.72rem; color: var(--text3); line-height: 1.6; border-left: 2px solid var(--border2); padding-left: 10px; }
+
+/* ── PERFIL ── */
+.pf-label { font-size: 0.72rem; color: var(--text3); margin-bottom: 0.6rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0.9rem; }
+.tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 20px; font-family: 'Josefin Sans', sans-serif; letter-spacing: 0.06em; border: 1px solid; }
+.tl { background: rgba(60,52,137,0.2); color: #a0a0f0; border-color: rgba(60,52,137,0.4); }
+.tm { background: rgba(8,80,65,0.2); color: #80d0b0; border-color: rgba(8,80,65,0.4); }
+.ts { background: rgba(113,43,19,0.2); color: #e09070; border-color: rgba(113,43,19,0.4); }
+.td { background: rgba(99,56,6,0.2); color: #d0a050; border-color: rgba(99,56,6,0.4); }
+.tf { background: rgba(114,36,62,0.2); color: #e090b0; border-color: rgba(114,36,62,0.4); }
+.pf-body { font-size: 0.85rem; color: var(--text2); line-height: 1.75; }
+
+/* ── DILEMAS ── */
+.dilema-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 1rem; margin-bottom: 0.75rem; transition: border-color 0.2s;
+}
+.dilema-card:hover { border-color: var(--border2); }
+.dilema-q { font-size: 0.82rem; color: var(--text); margin-bottom: 0.6rem; line-height: 1.5; }
+.dilema-opts { display: flex; flex-direction: column; gap: 5px; }
+.dilema-opt {
+  padding: 6px 10px; border-radius: 3px; border: 1px solid var(--border);
+  background: transparent; color: var(--text2); font-family: inherit; font-size: 0.78rem;
+  cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.4;
+}
+.dilema-opt:hover { border-color: var(--border2); background: var(--bg3); color: var(--text); }
+.dilema-opt.chosen { border-color: var(--accent2); background: rgba(138,106,48,0.12); color: var(--accent); }
+.dilema-result { font-size: 0.72rem; color: var(--text3); margin-top: 6px; padding-left: 2px; font-style: italic; line-height: 1.5; display: none; }
+.dilema-result.show { display: block; }
+
+/* ── PROGRESSO ── */
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 0.5rem; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.4s ease; }
+.progress-pct { font-size: 0.65rem; color: var(--text3); letter-spacing: 0.08em; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(60px);
+  background: var(--bg2); border: 1px solid var(--border2); color: var(--text);
+  font-family: 'Josefin Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em;
+  padding: 9px 18px; border-radius: 20px; z-index: 999;
+  transition: transform 0.25s ease; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── GM PANEL ── */
+#gm-panel { display: none; }
+#gm-panel.open { display: block; }
+.gm-header { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.gm-title { font-family: 'Josefin Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; }
+.gm-badge { background: var(--red); color: #fcc; font-family: 'Josefin Sans', sans-serif; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.1em; }
+.pcgm { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 1rem; overflow: hidden; transition: border-color 0.2s; }
+.pcgm:hover { border-color: var(--border2); }
+.pcgm-hdr { background: var(--bg2); padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+.pcgm-name { font-family: 'Josefin Sans', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; color: var(--accent); }
+.pcgm-meta { font-size: 0.7rem; color: var(--text3); }
+.pcgm-body { padding: 1.25rem; }
+.ablock { background: var(--bg2); border-left: 2px solid var(--border2); border-radius: 0 3px 3px 0; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem; font-size: 0.8rem; color: var(--text2); line-height: 1.7; }
+.ablock.red { border-left-color: var(--red2); }
+.ablock.acc { border-left-color: var(--accent2); }
+.ablock.green { border-left-color: #2d8a50; }
+.ablock strong { font-family: 'Josefin Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; display: block; margin-bottom: 3px; }
+.hook-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text2); line-height: 1.7; }
+.hook-block::before { content: '— '; color: var(--accent2); }
+.acc-hdr { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 7px 0; font-family: 'Josefin Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; user-select: none; border-bottom: 1px solid var(--border); }
+.acc-hdr:hover { color: var(--text2); }
+.acc-arrow { transition: transform 0.2s; font-size: 0.7rem; }
+.acc-hdr.open .acc-arrow { transform: rotate(180deg); }
+.acc-body { display: none; padding-top: 0.75rem; }
+.acc-body.open { display: block; }
+.score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+@media(max-width:480px){ .score-grid { grid-template-columns: 1fr 1fr; } }
+.score-cell { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 0.6rem; text-align: center; }
+.score-val { font-family: 'Josefin Sans', sans-serif; font-size: 1.1rem; color: var(--accent); letter-spacing: 0.04em; }
+.score-lbl { font-size: 0.6rem; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+.bar-wrap { margin-bottom: 0.5rem; }
+.bar-lbl { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text3); margin-bottom: 3px; }
+.bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.ai-flag { background: rgba(138,106,48,0.1); border: 1px solid rgba(138,106,48,0.3); border-radius: var(--r); padding: 0.5rem 0.8rem; font-size: 0.75rem; color: #c8a050; line-height: 1.5; margin-bottom: 0.6rem; }
+.ai-flag strong { display: block; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; color: #d0b060; }
+.del-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--r); padding: 5px 10px; font-family: 'Josefin Sans', sans-serif; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--text3); cursor: pointer; transition: all 0.15s; }
+.del-btn:hover { border-color: var(--red); color: var(--red2); }
+.empty { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+.empty p { font-family: 'Josefin Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.1em; }
+@media(max-width:500px){ .body{padding:1rem 0.75rem 5rem;} .card{padding:1.1rem;} .radar-wrap{flex-direction:column;} }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">Criação de Personagem</div>
+  <div class="hdr-right">
+    <div class="sync-row"><div class="sync-dot" id="sync-dot"></div><span id="sync-lbl">local</span></div>
+  </div>
+</header>
+
+<!-- MODAL SENHA -->
+<div class="overlay" id="gm-modal">
+  <div class="modal">
+    <h3>Acesso Restrito</h3>
+    <p>Área exclusiva. Insira a senha para continuar.</p>
+    <input type="password" class="modal-input" id="gm-pw" placeholder="Senha..." onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="modal-err" id="modal-err">Credenciais inválidas.</div>
+    <div class="modal-btns">
+      <button class="btn btn-acc" style="flex:1" onclick="doLogin()">Entrar</button>
+      <button class="btn" style="flex:1" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR DELETE -->
+<div class="overlay" id="del-modal">
+  <div class="modal">
+    <h3>Confirmar exclusão</h3>
+    <p id="del-msg">Tem certeza que deseja apagar esta ficha? Esta ação não pode ser desfeita.</p>
+    <div class="modal-btns">
+      <button class="btn btn-red" style="flex:1" id="del-confirm-btn">Apagar</button>
+      <button class="btn" style="flex:1" onclick="closeDelModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<main class="body">
+
+<!-- ════════════════ PAINEL JOGADOR ════════════════ -->
+<div id="player-panel">
+
+  <!-- PROGRESSO GERAL -->
+  <div class="card" id="progress-card">
+    <div class="card-head">
+      <div class="card-title">Progresso da ficha</div>
+      <div class="card-sub">Preencha todos os campos para uma análise completa do seu personagem</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-pct" id="prog-pct">0% completo</div>
+  </div>
+
+  <!-- IDENTIDADE -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Identidade</div>
+      <div class="card-sub">Quem é esse ser que caminha pelo mundo?</div>
+    </div>
+    <div class="field">
+      <label class="label" for="char-name">Nome do personagem</label>
+      <input class="inp" id="char-name" type="text" placeholder="ex: Arthur Galm..." oninput="autoSave();updateProgress()">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label class="label" for="char-player">Seu nome (jogador)</label>
+        <input class="inp" id="char-player" type="text" placeholder="seu nome..." oninput="autoSave();updateProgress()" id="char-player">
+      </div>
+      <div class="field">
+        <label class="label" for="char-class">Classe</label>
+        <input class="inp" id="char-class" type="text" placeholder="ex: Paladino..." oninput="autoSave();updateProgress()">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label class="label" for="char-race">Raça / Origem</label>
+        <input class="inp" id="char-race" type="text" placeholder="ex: Humano do norte..." oninput="autoSave();updateProgress()">
+      </div>
+      <div class="field">
+        <label class="label" for="char-age">Idade do personagem</label>
+        <input class="inp" id="char-age" type="text" placeholder="ex: 30 anos..." oninput="autoSave();updateProgress()">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="char-desc">Traços de personalidade marcantes</label>
+      <input class="inp" id="char-desc" type="text" placeholder="ex: Irônico, desconfiado, protetor às escondidas..." oninput="autoSave();updateProgress()">
+    </div>
+  </div>
+
+  <!-- TENDÊNCIAS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Tendências e Valores</div>
+      <div class="card-sub">Arraste os eixos para posicionar sua alma no espectro moral</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tb-eixos" onclick="switchTab('eixos')">Eixos</button>
+      <button class="tab" id="tb-radar" onclick="switchTab('radar')">Radar</button>
+      <button class="tab" id="tb-perfil" onclick="switchTab('perfil')">Perfil</button>
+    </div>
+
+    <!-- EIXOS -->
+    <div id="tab-eixos" class="panel active">
+      <div class="axis" data-axis="ordem">
+        <div class="axis-top"><span class="axis-name">Ordem ↔ Caos</span><span class="axis-desc">Respeito por regras e hierarquias</span></div>
+        <div class="axis-poles"><span>Ordem absoluta</span><span>Caos puro</span></div>
+        <div class="axis-label-live" id="lv-ordem"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-ordem" oninput="onSlider('ordem');autoSave()">
+          <span class="val-n" id="vn-ordem">50</span>
+        </div>
+      </div>
+      <div class="axis" data-axis="moral">
+        <div class="axis-top"><span class="axis-name">Bem ↔ Mal</span><span class="axis-desc">Empatia versus egoísmo e malícia</span></div>
+        <div class="axis-poles"><span>Bondade pura</span><span>Maldade pura</span></div>
+        <div class="axis-label-live" id="lv-moral"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-moral" oninput="onSlider('moral');autoSave()">
+          <span class="val-n" id="vn-moral">50</span>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div class="axis" data-axis="coragem">
+        <div class="axis-top"><span class="axis-name">Coragem ↔ Prudência</span><span class="axis-desc">Disposição para enfrentar riscos</span></div>
+        <div class="axis-poles"><span>Impávido</span><span>Cauteloso</span></div>
+        <div class="axis-label-live" id="lv-coragem"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-coragem" oninput="onSlider('coragem');autoSave()">
+          <span class="val-n" id="vn-coragem">50</span>
+        </div>
+      </div>
+      <div class="axis" data-axis="motiv">
+        <div class="axis-top"><span class="axis-name">Motivação primária</span><span class="axis-desc">O que move o personagem acima de tudo</span></div>
+        <div class="axis-poles"><span>Dever / Ideal</span><span>Poder / Interesse</span></div>
+        <div class="axis-label-live" id="lv-motiv"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-motiv" oninput="onSlider('motiv');autoSave()">
+          <span class="val-n" id="vn-motiv">50</span>
+        </div>
+      </div>
+      <div class="axis" data-axis="fe">
+        <div class="axis-top"><span class="axis-name">Devoção ↔ Ceticismo</span><span class="axis-desc">Fé em poderes maiores ou divindades</span></div>
+        <div class="axis-poles"><span>Fervoroso</span><span>Ateu / Cético</span></div>
+        <div class="axis-label-live" id="lv-fe"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-fe" oninput="onSlider('fe');autoSave()">
+          <span class="val-n" id="vn-fe">50</span>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div class="sec-lbl">Coerência moral</div>
+      <div class="axis" data-axis="coer">
+        <div class="axis-top"><span class="axis-name">Consistência ↔ Conflito interno</span><span class="axis-desc">Quanto suas ações refletem seus valores</span></div>
+        <div class="axis-poles"><span>Age conforme crê</span><span>Age contra seus valores</span></div>
+        <div class="axis-label-live" id="lv-coer"></div>
+        <div class="slider-row">
+          <input type="range" min="0" max="100" value="50" id="s-coer" oninput="onSlider('coer');autoSave()">
+          <span class="val-n" id="vn-coer">50</span>
+        </div>
+      </div>
+      <div class="coer-explain">
+        <strong>O que é coerência moral?</strong>
+        Este eixo mede o quanto seu personagem <em>age de acordo com o que acredita</em>.
+        No lado esquerdo: um personagem que pratica o que prega — suas escolhas refletem seus valores sem hesitação.
+        No lado direito: um personagem que <em>sabe</em> o que é certo para ele, mas age diferente — por medo, ganância, trauma, pressão social ou fraqueza de vontade. Esse conflito interno é uma das fontes mais ricas de drama narrativo: personagens que traem seus próprios princípios tendem a ter arcos de redenção ou queda muito mais impactantes.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:1.25rem;">
+        <button class="btn btn-acc" onclick="switchTab('radar')">Ver radar</button>
+        <button class="btn" onclick="switchTab('perfil')">Perfil narrativo</button>
+        <button class="btn btn-ghost" onclick="resetSliders()">Resetar</button>
+      </div>
+    </div>
+
+    <!-- RADAR -->
+    <div id="tab-radar" class="panel">
+      <div class="radar-wrap">
+        <svg id="radar-svg" viewBox="0 0 280 280" width="240" height="240"></svg>
+        <div class="radar-leg">
+          <div class="sec-lbl" style="margin-bottom:8px">Eixos</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#8080e0"></span>Ordem ↔ Caos</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#40b890"></span>Bem ↔ Mal</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#d06040"></span>Coragem ↔ Prudência</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#c09030"></span>Motivação</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#c05080"></span>Devoção ↔ Ceticismo</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#4080c0"></span>Coerência</div>
+        </div>
+      </div>
+      <div class="radar-note">Quanto mais próximo da ponta, mais forte aquele polo. Centro = neutro. O hexágono traça o perfil completo.</div>
+    </div>
+
+    <!-- PERFIL -->
+    <div id="tab-perfil" class="panel">
+      <div class="pf-label" id="pf-label"></div>
+      <div class="tags" id="pf-tags"></div>
+      <div class="pf-body" id="pf-body">Configure os eixos e volte aqui para ver o perfil gerado.</div>
+      <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap;">
+        <button class="btn btn-acc" onclick="genProfile()">Atualizar perfil</button>
+        <button class="btn btn-ghost" onclick="switchTab('eixos')">Editar eixos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DILEMAS MORAIS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Dilemas morais</div>
+      <div class="card-sub">Opcional — suas escolhas revelam como seu personagem realmente pensa</div>
+    </div>
+    <div id="dilemas-container"></div>
+  </div>
+
+  <!-- HISTORIA -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Historia e Descricao</div>
+      <div class="card-sub">Quanto mais voce escrever, mais rico sera o personagem</div>
+    </div>
+    <div class="field">
+      <label class="label" for="char-aparencia">Aparência física</label>
+      <textarea class="textarea" id="char-aparencia" placeholder="Como seu personagem parece? O que as pessoas notam primeiro? Marcas, roupas, postura, olhar..." oninput="autoSave();updateProgress()" style="min-height:80px"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-historia">Origem e história</label>
+      <textarea class="textarea" id="char-historia" placeholder="De onde veio? Quais eventos moldaram quem é hoje? Família, tragédias, conquistas, segredos não revelados. Quanto mais detalhe, mais material o mestre tem para criar arcos únicos para você..." oninput="autoSave();updateProgress()"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-objetivo">Objetivo principal</label>
+      <textarea class="textarea" id="char-objetivo" placeholder="O que seu personagem busca com mais determinação? O que o mantém vivo e em movimento? O que ele jamais abandonaria?" oninput="autoSave();updateProgress()" style="min-height:80px"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-medo">Medo ou fraqueza profunda</label>
+      <textarea class="textarea" id="char-medo" placeholder="Todo personagem tem um ponto cego ou algo que o paralisa. Qual é o dele? Pode ser físico, emocional, social..." oninput="autoSave();updateProgress()" style="min-height:70px"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-conexao">Conexão com o mundo do jogo</label>
+      <textarea class="textarea" id="char-conexao" placeholder="Tem alguém que importa? Uma organização, lugar ou crença que define quem ele é? Uma dívida, uma promessa ou uma obsessão?" oninput="autoSave();updateProgress()" style="min-height:70px"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-segredo">Segredo (apenas o mestre verá)</label>
+      <textarea class="textarea" id="char-segredo" placeholder="Algo que seu personagem esconde de todos os outros jogadores. Pode ser uma vergonha, um pacto sombrio, uma identidade oculta, uma culpa..." oninput="autoSave();updateProgress()" style="min-height:80px;border-color:var(--accent2)"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" for="char-gancho">Recado ao mestre</label>
+      <textarea class="textarea" id="char-gancho" placeholder="Algo que só o mestre precisa saber. Ideias de arco, elementos que você quer ver na campanha, coisas que prefere evitar, combinados especiais..." oninput="autoSave();updateProgress()" style="min-height:80px"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:1.25rem;">
+      <button class="btn btn-acc" onclick="submitChar()">Enviar ao Mestre</button>
+      <button class="btn btn-ghost" onclick="clearDraft()">Limpar rascunho</button>
+    </div>
+    <p style="font-size:0.7rem;color:var(--text3);margin-top:0.5rem;" id="submit-status"></p>
+  </div>
+
+</div><!-- /player-panel -->
+
+<!-- ════════════════ PAINEL MESTRE ════════════════ -->
+<div id="gm-panel">
+  <div class="gm-header">
+    <div class="gm-title">Painel do Mestre</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="gm-badge">MESTRE</span>
+      <button class="btn btn-sm" onclick="exitGM()">Sair</button>
+    </div>
+  </div>
+  <div id="gm-list"><div class="empty"><p>Nenhum jogador enviou ficha ainda.</p></div></div>
+</div>
+
+</main>
+
+<script>
+// ═══════════ CONFIG ═══════════
+const GM_TRIGGER_NAME = 'PIETROW';
+const GM_PASSWORD = '220293';
+
+// ═══════════ ESTADO ═══════════
+let isGM = false, firebaseReady = false, db = null, saveT = null;
+let pendingDeleteKey = null;
+const vals = {ordem:50,moral:50,coragem:50,motiv:50,fe:50,coer:50};
+
+// ═══════════ FIREBASE ═══════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDQQp81eWmKv8-0p_T9X5FTrUdTVatVjis",
+  authDomain: "rpg-crideper.firebaseapp.com",
+  databaseURL: "https://rpg-crideper-default-rtdb.firebaseio.com",
+  projectId: "rpg-crideper",
+  storageBucket: "rpg-crideper.firebasestorage.app",
+  messagingSenderId: "729289618146",
+  appId: "1:729289618146:web:b6425fddbb25c7651ce4bb"
+};
+
+function initFB() {
+  const scripts = [
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js'
+  ];
+  let n = 0;
+  scripts.forEach(src => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => { if (++n === scripts.length) startFB(); };
+    document.head.appendChild(s);
+  });
+}
+function startFB() {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    firebaseReady = true;
+    setSyncStatus('ok','sincronizado');
+    if (isGM) listenPlayers();
+  } catch(e) { setSyncStatus('err','erro'); }
+}
+
+// ═══════════ GM ACCESS ═══════════
+function checkNameTrigger() {
+  const v = document.getElementById('char-name').value.trim().toUpperCase();
+  if (v === GM_TRIGGER_NAME) {
+    document.getElementById('char-name').value = '';
+    openModal();
+  }
+}
+
+function openModal() {
+  document.getElementById('gm-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('gm-pw').focus(),100);
+}
+function closeModal() {
+  document.getElementById('gm-modal').classList.remove('open');
+  document.getElementById('gm-pw').value='';
+  document.getElementById('modal-err').style.display='none';
+}
+function doLogin() {
+  if (document.getElementById('gm-pw').value === GM_PASSWORD) {
+    isGM = true; closeModal();
+    document.getElementById('player-panel').style.display='none';
+    document.getElementById('gm-panel').classList.add('open');
+    if (firebaseReady) listenPlayers(); else renderPlayers(getLocalPlayers());
+    toast('Bem-vindo, Mestre');
+  } else {
+    document.getElementById('modal-err').style.display='block';
+    document.getElementById('gm-pw').value='';
+    document.getElementById('gm-pw').focus();
+  }
+}
+function exitGM() {
+  isGM = false;
+  document.getElementById('gm-panel').classList.remove('open');
+  document.getElementById('player-panel').style.display='block';
+}
+
+// ═══════════ DELETE ═══════════
+function askDelete(key, name) {
+  pendingDeleteKey = key;
+  document.getElementById('del-msg').textContent = `Tem certeza que deseja apagar a ficha de "${name}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('del-modal').classList.add('open');
+  document.getElementById('del-confirm-btn').onclick = () => confirmDelete();
+}
+function closeDelModal() {
+  document.getElementById('del-modal').classList.remove('open');
+  pendingDeleteKey = null;
+}
+function confirmDelete() {
+  if (!pendingDeleteKey) return;
+  const key = pendingDeleteKey;
+  closeDelModal();
+  if (firebaseReady && db) {
+    db.ref('players/' + key).remove().then(()=>toast('Ficha apagada')).catch(()=>deleteLocal(key));
+  } else deleteLocal(key);
+}
+function deleteLocal(key) {
+  const lp = getLocalPlayers();
+  delete lp[key]; localStorage.setItem('dnd_players',JSON.stringify(lp));
+  renderPlayers(lp); toast('Ficha apagada localmente');
+}
+
+// ═══════════ SLIDERS ═══════════
+const AXIS_LABELS = {
+  ordem: [
+    [0,8,'Absolutamente ordenado'],
+    [8,22,'Muito ordenado'],
+    [22,38,'Ordenado'],
+    [38,48,'Levemente ordenado'],
+    [48,52,'Neutro (ordem)'],
+    [52,62,'Levemente caótico'],
+    [62,78,'Caótico'],
+    [78,92,'Muito caótico'],
+    [92,100,'Absolutamente caótico']
+  ],
+  moral: [
+    [0,8,'Absolutamente bondoso'],
+    [8,22,'Muito bondoso'],
+    [22,38,'Bondoso'],
+    [38,48,'Levemente bondoso'],
+    [48,52,'Neutro (moral)'],
+    [52,62,'Levemente malévolo'],
+    [62,78,'Malévolo'],
+    [78,92,'Muito malévolo'],
+    [92,100,'Absolutamente malévolo']
+  ],
+  coragem: [
+    [0,8,'Absolutamente temerário'],
+    [8,22,'Muito corajoso'],
+    [22,38,'Corajoso'],
+    [38,48,'Levemente corajoso'],
+    [48,52,'Equilibrado (risco)'],
+    [52,62,'Levemente prudente'],
+    [62,78,'Prudente'],
+    [78,92,'Muito cauteloso'],
+    [92,100,'Extremamente cauteloso']
+  ],
+  motiv: [
+    [0,8,'Movido puramente por ideal'],
+    [8,22,'Muito idealista'],
+    [22,38,'Idealista'],
+    [38,48,'Levemente idealista'],
+    [48,52,'Motivação mista'],
+    [52,62,'Levemente pragmático'],
+    [62,78,'Pragmático'],
+    [78,92,'Muito pragmático'],
+    [92,100,'Movido puramente por interesse']
+  ],
+  fe: [
+    [0,8,'Fé absoluta'],
+    [8,22,'Muito devoto'],
+    [22,38,'Devoto'],
+    [38,48,'Levemente devoto'],
+    [48,52,'Espiritualmente neutro'],
+    [52,62,'Levemente cético'],
+    [62,78,'Cético'],
+    [78,92,'Muito cético'],
+    [92,100,'Completamente ateu / cético']
+  ],
+  coer: [
+    [0,8,'Coerência absoluta'],
+    [8,22,'Muito coerente'],
+    [22,38,'Coerente'],
+    [38,48,'Levemente coerente'],
+    [48,52,'Equilíbrio entre consistência e conflito'],
+    [52,62,'Levemente conflituado'],
+    [62,78,'Conflituado'],
+    [78,92,'Muito conflituado internamente'],
+    [92,100,'Conflito interno extremo']
+  ]
+};
+
+function getAxisLabel(axis, v) {
+  for (const [lo,hi,lbl] of AXIS_LABELS[axis]) {
+    if (v >= lo && v <= hi) return lbl;
+  }
+  return '';
+}
+
+function onSlider(axis) {
+  const v = +document.getElementById('s-'+axis).value;
+  vals[axis] = v;
+  document.getElementById('vn-'+axis).textContent = v;
+  document.getElementById('lv-'+axis).textContent = getAxisLabel(axis, v);
+  drawRadar();
+}
+
+function resetSliders() {
+  Object.keys(vals).forEach(k => {
+    vals[k] = 50;
+    document.getElementById('s-'+k).value = 50;
+    document.getElementById('vn-'+k).textContent = 50;
+    document.getElementById('lv-'+k).textContent = getAxisLabel(k, 50);
+  });
+  drawRadar();
+}
+
+function initSliders() {
+  Object.keys(vals).forEach(k => {
+    document.getElementById('lv-'+k).textContent = getAxisLabel(k, vals[k]);
+    document.getElementById('vn-'+k).textContent = vals[k];
+    document.getElementById('s-'+k).value = vals[k];
+  });
+  drawRadar();
+}
+
+// ═══════════ RADAR ═══════════
+function drawRadar() {
+  const svg = document.getElementById('radar-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+  const cx=140,cy=140,r=105,n=6;
+  const axVals = [vals.ordem,vals.moral,vals.coragem,vals.motiv,vals.fe,vals.coer];
+  const colors = ['#8080e0','#40b890','#d06040','#c09030','#c05080','#4080c0'];
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // grade
+  for (let g=1;g<=5;g++) {
+    const pts=[];
+    for (let i=0;i<n;i++) {
+      const a=(i/n)*Math.PI*2-Math.PI/2;
+      pts.push([cx+Math.cos(a)*r*(g/5), cy+Math.sin(a)*r*(g/5)]);
+    }
+    const poly=document.createElementNS(NS,'polygon');
+    poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
+    poly.setAttribute('fill',g===5?'rgba(255,255,255,0.02)':'none');
+    poly.setAttribute('stroke',`rgba(255,255,255,${g===5?'0.08':'0.04'})`);
+    poly.setAttribute('stroke-width','0.5');
+    svg.appendChild(poly);
+  }
+  for (let i=0;i<n;i++) {
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const ln=document.createElementNS(NS,'line');
+    ln.setAttribute('x1',cx);ln.setAttribute('y1',cy);
+    ln.setAttribute('x2',cx+Math.cos(a)*r);ln.setAttribute('y2',cy+Math.sin(a)*r);
+    ln.setAttribute('stroke','rgba(255,255,255,0.05)');ln.setAttribute('stroke-width','0.5');
+    svg.appendChild(ln);
+  }
+
+  // polígono do personagem
+  const pts = axVals.map((v,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const dist=r*(v/100);
+    return [cx+Math.cos(a)*dist, cy+Math.sin(a)*dist];
+  });
+  // animação: adiciona pontos antigos se existirem
+  const poly=document.createElementNS(NS,'polygon');
+  poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
+  poly.setAttribute('fill','rgba(192,160,96,0.08)');
+  poly.setAttribute('stroke','rgba(192,160,96,0.5)');
+  poly.setAttribute('stroke-width','1.5');
+  svg.appendChild(poly);
+
+  pts.forEach((p,i)=>{
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r','4');
+    c.setAttribute('fill',colors[i]);
+    // pulse
+    const anim=document.createElementNS(NS,'animate');
+    anim.setAttribute('attributeName','r');
+    anim.setAttribute('values','4;5;4');
+    anim.setAttribute('dur','2s');
+    anim.setAttribute('repeatCount','indefinite');
+    anim.setAttribute('begin',`${i*0.3}s`);
+    c.appendChild(anim);
+    svg.appendChild(c);
+  });
+
+  const labels=['Ordem','Bem','Coragem','Motiv.','Devoção','Coerência'];
+  labels.forEach((l,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const tx=cx+Math.cos(a)*(r+22),ty=cy+Math.sin(a)*(r+22);
+    const t=document.createElementNS(NS,'text');
+    t.setAttribute('x',tx);t.setAttribute('y',ty);
+    t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');
+    t.setAttribute('font-size','9');t.setAttribute('fill',colors[i]);
+    t.setAttribute('font-weight','600');t.setAttribute('font-family','Josefin Sans, sans-serif');
+    t.setAttribute('letter-spacing','0.06');
+    t.textContent=l;
+    svg.appendChild(t);
+  });
+}
+
+// ═══════════ TABS ═══════════
+function switchTab(name) {
+  ['eixos','radar','perfil'].forEach(n=>{
+    document.getElementById('tab-'+n)?.classList.toggle('active',n===name);
+    document.getElementById('tb-'+n)?.classList.toggle('active',n===name);
+  });
+  if(name==='radar')drawRadar();
+  if(name==='perfil')genProfile();
+}
+
+// ═══════════ PERFIL ═══════════
+function getAlignment() {
+  const o=vals.ordem,m=vals.moral;
+  const lex=o<33?'Leal':o<67?'Neutro':'Caótico';
+  const mor=m<33?'Bom':m<67?'Neutro':'Mau';
+  return lex+' '+mor;
+}
+function getProfileText(e) {
+  const {ordem:o,moral:m,coragem:c,motiv:mo,fe:f,coer:co}=e||vals;
+  const p=[];
+  if(o<25)p.push('segue códigos rígidos e honra contratos acima de tudo');
+  else if(o<45)p.push('tende a respeitar regras quando conveniente');
+  else if(o<55)p.push('equilibra ordem e improviso conforme a situação exige');
+  else if(o<75)p.push('prefere agir por instinto e questiona autoridades');
+  else p.push('rejeita hierarquias e vive segundo a própria lei');
+  if(m<25)p.push('é movido por compaixão genuína e busca proteger os inocentes');
+  else if(m<45)p.push('tem impulsos altruístas mas não se sacrifica facilmente');
+  else if(m<55)p.push('age por interesse próprio sem ser cruel');
+  else if(m<75)p.push('pode machucar outros quando necessário para seus fins');
+  else p.push('enxerga o sofrimento alheio como ferramenta ou irrelevância');
+  if(c<30)p.push('enfrenta o perigo de frente sem hesitar');
+  else if(c>70)p.push('prefere planejar e evitar confrontos desnecessários');
+  else p.push('avalia os riscos antes de agir');
+  if(mo<30)p.push('é guiado por um ideal ou dever que não negocia');
+  else if(mo>70)p.push('busca poder, riqueza ou benefício pessoal como fim último');
+  else p.push('equilibra obrigações e interesse próprio');
+  if(f<25)p.push('possui fé inabalável em sua divindade ou destino');
+  else if(f>75)p.push('confia apenas no que pode tocar e provar');
+  else p.push('mantém dúvidas sobre o sagrado');
+  if(co<40)p.push('age em plena consonância com seus valores');
+  else if(co>70)p.push('frequentemente age contra o que acredita — há conflito interno profundo');
+  else p.push('às vezes cede e contradiz seus próprios princípios');
+  return p.join('; ')+'.';
+}
+function genProfile() {
+  const {ordem:o,moral:m,coer:co}=vals;
+  document.getElementById('pf-label').textContent='Tendência clássica aproximada: '+getAlignment();
+  const tags=[];
+  tags.push({t:getAxisLabel('ordem',o),c:'tl'});
+  tags.push({t:getAxisLabel('moral',m),c:'tm'});
+  if(Math.abs(vals.coragem-50)>15)tags.push({t:getAxisLabel('coragem',vals.coragem),c:'ts'});
+  if(Math.abs(vals.motiv-50)>15)tags.push({t:getAxisLabel('motiv',vals.motiv),c:'td'});
+  if(Math.abs(vals.fe-50)>15)tags.push({t:getAxisLabel('fe',vals.fe),c:'tf'});
+  if(co>60)tags.push({t:'Conflituado internamente',c:'tl'});
+  document.getElementById('pf-tags').innerHTML=tags.map(t=>`<span class="tag ${t.c}">${t.t}</span>`).join('');
+  document.getElementById('pf-body').textContent='Este personagem '+getProfileText();
+}
+
+// ═══════════ DILEMAS ═══════════
+const DILEMAS = [
+  {
+    q: 'Uma criança roubou pão de uma guarda corrupta que maltrata os pobres. Você testemunhou. O que faz?',
+    opts: [
+      {t:'Ignora — não é problema seu.',hint:'Tende ao neutro-caótico ou pragmático extremo.'},
+      {t:'Entrega a criança. A lei é a lei.',hint:'Tende ao leal neutro ou leal mau.'},
+      {t:'Ajuda a criança a escapar discretamente.',hint:'Tende ao caótico bom.'},
+      {t:'Confronta a guarda abertamente.',hint:'Tende ao leal bom ou neutro bom corajoso.'},
+    ]
+  },
+  {
+    q: 'Você descobriu que seu aliado mais próximo mentiu para o grupo em benefício próprio. Ninguém mais sabe.',
+    opts: [
+      {t:'Guarda o segredo. Lealdade acima de tudo.',hint:'Tende ao leal, motivado por vínculo pessoal.'},
+      {t:'Confronta em privado e dá uma chance.',hint:'Tende ao neutro bom, equilibrado.'},
+      {t:'Revela ao grupo imediatamente.',hint:'Tende ao leal bom ou neutro com alta coerência.'},
+      {t:'Usa a informação como alavanca futura.',hint:'Tende ao pragmático, possivelmente malévolo.'},
+    ]
+  },
+  {
+    q: 'Um oráculo diz que você pode salvar centenas de vidas sacrificando uma pessoa inocente que jamais soube disso.',
+    opts: [
+      {t:'Recusa. Nenhum fim justifica esse meio.',hint:'Tende ao bom com alta coerência moral.'},
+      {t:'Aceita. O cálculo numérico é claro.',hint:'Tende ao neutro pragmático ou mau utilitarista.'},
+      {t:'Busca uma terceira saída antes de decidir.',hint:'Tende ao prudente, neutro ou bom corajoso.'},
+      {t:'Deixa outra pessoa decidir. Não quer a culpa.',hint:'Alta incoerência moral — conflito interno.'},
+    ]
+  },
+  {
+    q: 'Uma divindade em quem você acreditava cometeu um ato que você considera claramente errado. O que sente?',
+    opts: [
+      {t:'Busca justificativas. Os deuses têm planos maiores.',hint:'Alta devoção, baixo ceticismo.'},
+      {t:'Questiona ativamente, mas mantém a fé.',hint:'Devoção moderada com senso crítico.'},
+      {t:'Abandona a fé. Provas valem mais que dogma.',hint:'Alto ceticismo, pragmático.'},
+      {t:'Sente raiva mas continua seguindo. É o que tem.',hint:'Conflito interno elevado, coerência baixa.'},
+    ]
+  }
+];
+
+function renderDilemas() {
+  const cont = document.getElementById('dilemas-container');
+  cont.innerHTML = DILEMAS.map((d,di)=>`
+    <div class="dilema-card" id="dc-${di}">
+      <div class="dilema-q">${d.q}</div>
+      <div class="dilema-opts">
+        ${d.opts.map((o,oi)=>`
+          <button class="dilema-opt" id="do-${di}-${oi}" onclick="chooseDilema(${di},${oi})">
+            ${o.t}
+          </button>
+        `).join('')}
+      </div>
+      <div class="dilema-result" id="dr-${di}"></div>
+    </div>
+  `).join('');
+}
+
+const dilemaCh = {};
+function chooseDilema(di,oi) {
+  dilemaCh[di] = oi;
+  DILEMAS[di].opts.forEach((_,i)=>{
+    document.getElementById(`do-${di}-${i}`)?.classList.toggle('chosen',i===oi);
+  });
+  const res = document.getElementById(`dr-${di}`);
+  res.textContent = DILEMAS[di].opts[oi].hint;
+  res.classList.add('show');
+  autoSave();
+}
+
+// ═══════════ PROGRESSO ═══════════
+function updateProgress() {
+  const fields = ['char-name','char-player','char-class','char-race','char-age','char-desc','char-aparencia','char-historia','char-objetivo','char-medo','char-conexao','char-segredo','char-gancho'];
+  const filled = fields.filter(id=>{ const el=document.getElementById(id); return el&&el.value.trim().length>5; }).length;
+  const pct = Math.round((filled/fields.length)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'% completo';
+}
+
+// ═══════════ AUTO-SAVE ═══════════
+function autoSave() {
+  clearTimeout(saveT);
+  saveT = setTimeout(saveDraft, 800);
+}
+function saveDraft() {
+  const data = collectData();
+  if (data.playerName) localStorage.setItem('dnd_draft_'+data.playerName, JSON.stringify(data));
+  setSyncStatus('ok','salvo');
+}
+function collectData() {
+  return {
+    charName: g('char-name'),
+    playerName: g('char-player'),
+    charClass: g('char-class'),
+    charRace: g('char-race'),
+    charAge: g('char-age'),
+    charDesc: g('char-desc'),
+    aparencia: g('char-aparencia'),
+    historia: g('char-historia'),
+    objetivo: g('char-objetivo'),
+    medo: g('char-medo'),
+    conexao: g('char-conexao'),
+    segredo: g('char-segredo'),
+    gancho: g('char-gancho'),
+    eixos: {...vals},
+    dilemas: {...dilemaCh},
+    alignmentLabel: getAlignment(),
+    profileText: getProfileText(),
+    submittedAt: new Date().toISOString(),
+    textMeta: gatherTextMeta()
+  };
+}
+function g(id){ const el=document.getElementById(id); return el?el.value:''; }
+
+function loadDraft() {
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('dnd_draft_'));
+  if(!keys.length)return;
+  try { applyData(JSON.parse(localStorage.getItem(keys[0]))); } catch(e){}
+}
+function applyData(d) {
+  if(!d)return;
+  const fields=['charName:char-name','playerName:char-player','charClass:char-class','charRace:char-race','charAge:char-age','charDesc:char-desc','aparencia:char-aparencia','historia:char-historia','objetivo:char-objetivo','medo:char-medo','conexao:char-conexao','segredo:char-segredo','gancho:char-gancho'];
+  fields.forEach(f=>{
+    const [dk,eid]=f.split(':');
+    if(d[dk]){const el=document.getElementById(eid);if(el)el.value=d[dk];}
+  });
+  if(d.eixos){Object.assign(vals,d.eixos);initSliders();}
+  if(d.dilemas){Object.entries(d.dilemas).forEach(([di,oi])=>chooseDilema(+di,+oi));}
+  updateProgress();
+}
+function clearDraft() {
+  if(!confirm('Limpar rascunho?'))return;
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('dnd_draft_'));
+  keys.forEach(k=>localStorage.removeItem(k));
+  toast('Rascunho apagado');
+}
+
+// ═══════════ TEXT META (detecção de cola) ═══════════
+const textMeta = {};
+function trackPaste(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('paste', ()=>{ textMeta[id] = (textMeta[id]||0) + 1; });
+  el.addEventListener('input', (e)=>{
+    if (!textMeta[id+'_len']) textMeta[id+'_len'] = 0;
+    const cur = el.value.length;
+    const diff = cur - textMeta[id+'_len'];
+    if (diff > 80) textMeta[id+'_jump'] = (textMeta[id+'_jump']||0) + 1;
+    textMeta[id+'_len'] = cur;
+    textMeta[id+'_edits'] = (textMeta[id+'_edits']||0) + 1;
+    textMeta[id+'_finalLen'] = cur;
+    textMeta[id+'_ts'] = Date.now();
+  });
+}
+function gatherTextMeta() {
+  const fields = ['char-historia','char-aparencia','char-objetivo','char-medo','char-conexao','char-segredo','char-gancho'];
+  const out = {};
+  fields.forEach(id=>{
+    const el=document.getElementById(id);
+    const len=el?el.value.trim().length:0;
+    out[id]={
+      pastes: textMeta[id]||0,
+      jumps: textMeta[id+'_jump']||0,
+      edits: textMeta[id+'_edits']||0,
+      finalLen: len
+    };
+  });
+  return out;
+}
+function initTextTracking() {
+  ['char-historia','char-aparencia','char-objetivo','char-medo','char-conexao','char-segredo','char-gancho'].forEach(trackPaste);
+}
+
+// ═══════════ SUBMIT ═══════════
+function submitChar() {
+  const data = collectData();
+  if (!data.playerName) { toast('Preencha seu nome primeiro'); return; }
+  if (!data.charName) { toast('Preencha o nome do personagem'); return; }
+  const lp = getLocalPlayers();
+  const key = data.playerName.replace(/[.#$[\]\s]/g,'_');
+  lp[key] = data;
+  localStorage.setItem('dnd_players',JSON.stringify(lp));
+  if (firebaseReady && db) {
+    setSyncStatus('busy','enviando...');
+    db.ref('players/'+key).set(data)
+      .then(()=>{ setSyncStatus('ok','enviado'); document.getElementById('submit-status').textContent='Ficha enviada com sucesso.'; toast('Ficha enviada'); })
+      .catch(()=>{ setSyncStatus('err','erro'); document.getElementById('submit-status').textContent='Erro de conexão — salvo localmente.'; });
+  } else { document.getElementById('submit-status').textContent='Salvo localmente.'; toast('Salvo localmente'); }
+}
+
+// ═══════════ GM: RENDER ═══════════
+function listenPlayers() {
+  if (!db) { renderPlayers(getLocalPlayers()); return; }
+  db.ref('players').on('value', snap=>{ renderPlayers(snap.val()||{}); });
+}
+function getLocalPlayers() { try{return JSON.parse(localStorage.getItem('dnd_players')||'{}');}catch(e){return {};} }
+
+function renderPlayers(players) {
+  const list = document.getElementById('gm-list');
+  const entries = Object.entries(players);
+  if (!entries.length) { list.innerHTML='<div class="empty"><p>Nenhum jogador enviou ficha ainda.</p></div>'; return; }
+  list.innerHTML = entries.map(([key,p])=>buildPCCard(key,p)).join('');
+}
+
+function buildPCCard(key, p) {
+  const e = p.eixos||{ordem:50,moral:50,coragem:50,motiv:50,fe:50,coer:50};
+  const date = p.submittedAt?new Date(p.submittedAt).toLocaleDateString('pt-BR'):'—';
+  const scores = calcScores(p);
+  const aiFlags = detectAIPatterns(p);
+  const analysis = buildAnalysis(p,e);
+  const hooks = buildHooks(p,e);
+  const dilemaText = p.dilemas ? Object.entries(p.dilemas).map(([di,oi])=>`<em>D${+di+1}:</em> "${esc(DILEMAS[+di]?.opts[+oi]?.t||'')}" — ${esc(DILEMAS[+di]?.opts[+oi]?.hint||'')}`).join('<br>') : null;
+
+  return `<div class="pcgm">
+    <div class="pcgm-hdr">
+      <div>
+        <div class="pcgm-name">${esc(p.charName||'Sem nome')} <span style="font-size:0.7rem;opacity:0.5">— ${esc(p.charClass||'')} ${esc(p.charRace||'')}</span></div>
+        <div class="pcgm-meta">Jogador: ${esc(p.playerName||'?')} · ${date} · ${esc(p.alignmentLabel||'—')}</div>
+      </div>
+      <button class="del-btn" onclick="askDelete('${esc(key)}','${esc(p.playerName||p.charName||'?')}')">Apagar ficha</button>
+    </div>
+    <div class="pcgm-body">
+
+      <!-- SCORES -->
+      <div class="sec-lbl" style="margin-bottom:8px">Avaliação da ficha</div>
+      <div class="score-grid">
+        <div class="score-cell"><div class="score-val">${scores.riqueza}</div><div class="score-lbl">Riqueza</div></div>
+        <div class="score-cell"><div class="score-val">${scores.coerencia}</div><div class="score-lbl">Coerência interna</div></div>
+        <div class="score-cell"><div class="score-val">${scores.originalidade}</div><div class="score-lbl">Originalidade</div></div>
+        <div class="score-cell"><div class="score-val">${scores.potencial}</div><div class="score-lbl">Potencial narrativo</div></div>
+        <div class="score-cell"><div class="score-val">${scores.engajamento}</div><div class="score-lbl">Engajamento</div></div>
+        <div class="score-cell"><div class="score-val">${scores.global}</div><div class="score-lbl">Global</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-lbl"><span>Completude da ficha</span><span>${scores.completude}%</span></div><div class="bar"><div class="bar-fill" style="width:${scores.completude}%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-bottom:0.75rem">${scores.completudeNote}</div>
+
+      ${aiFlags.length?`<div style="margin-bottom:0.75rem">${aiFlags.map(f=>`<div class="ai-flag"><strong>Sinal de texto colado / gerado por IA</strong>${f}</div>`).join('')}</div>`:''}
+
+      <!-- ANÁLISE TÉCNICA -->
+      <div class="acc-hdr" onclick="toggleAcc(this)"><span>Análise técnica de tendências</span><span class="acc-arrow">▾</span></div>
+      <div class="acc-body">
+        ${analysis.map(a=>`<div class="ablock ${a.cls||''}"><strong>${a.title}</strong>${a.body}</div>`).join('')}
+      </div>
+
+      <!-- DILEMAS -->
+      ${dilemaText?`<div class="acc-hdr" onclick="toggleAcc(this)" style="margin-top:0.5rem"><span>Respostas aos dilemas morais</span><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="ablock">${dilemaText}</div></div>`:''}
+
+      <!-- GANCHOS -->
+      <div class="acc-hdr" onclick="toggleAcc(this)" style="margin-top:0.5rem"><span>Ganchos e vetores narrativos</span><span class="acc-arrow">▾</span></div>
+      <div class="acc-body">
+        ${hooks.map(h=>`<div class="hook-block">${h}</div>`).join('')}
+      </div>
+
+      <!-- FICHA COMPLETA -->
+      <div class="acc-hdr" onclick="toggleAcc(this)" style="margin-top:0.5rem"><span>Ficha completa</span><span class="acc-arrow">▾</span></div>
+      <div class="acc-body">
+        ${p.aparencia?`<div class="ablock"><strong>Aparência</strong>${esc(p.aparencia)}</div>`:''}
+        ${p.historia?`<div class="ablock"><strong>História</strong>${esc(p.historia)}</div>`:''}
+        ${p.objetivo?`<div class="ablock"><strong>Objetivo</strong>${esc(p.objetivo)}</div>`:''}
+        ${p.medo?`<div class="ablock"><strong>Medo / fraqueza</strong>${esc(p.medo)}</div>`:''}
+        ${p.conexao?`<div class="ablock"><strong>Conexão com o mundo</strong>${esc(p.conexao)}</div>`:''}
+        ${p.segredo?`<div class="ablock acc"><strong>Segredo (confidencial)</strong>${esc(p.segredo)}</div>`:''}
+        ${p.gancho?`<div class="ablock"><strong>Recado ao mestre</strong>${esc(p.gancho)}</div>`:''}
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function calcScores(p) {
+  const fields = {
+    charName:[p.charName,5], charClass:[p.charClass,3], charRace:[p.charRace,3],
+    charAge:[p.charAge,2], charDesc:[p.charDesc,5], aparencia:[p.aparencia,12],
+    historia:[p.historia,25], objetivo:[p.objetivo,12], medo:[p.medo,10],
+    conexao:[p.conexao,10], segredo:[p.segredo,10], gancho:[p.gancho,3]
+  };
+  let rich=0, total=0;
+  Object.values(fields).forEach(([v,w])=>{
+    total+=w;
+    if(v&&v.trim().length>20)rich+=w;
+    else if(v&&v.trim().length>4)rich+=w*0.4;
+  });
+  const riqueza = Math.round((rich/total)*10);
+
+  // coerência interna: checar se eixo coer combina com os textos
+  const e=p.eixos||{coer:50};
+  const textLen=(p.historia||'').length+(p.objetivo||'').length+(p.medo||'').length;
+  const coerScore = e.coer<40?9:e.coer<60?7:e.coer<80?5:4;
+
+  // originalidade: heurística baseada em comprimento e variedade de campos preenchidos
+  const fieldsWithContent=[p.historia,p.objetivo,p.medo,p.conexao,p.segredo].filter(v=>v&&v.trim().length>30).length;
+  const originalidade=Math.min(10,fieldsWithContent*2+(textLen>800?2:textLen>400?1:0));
+
+  // potencial narrativo
+  const hasSecret=p.segredo&&p.segredo.trim().length>10?2:0;
+  const hasConflict=e.coer>60?2:1;
+  const hasMedo=p.medo&&p.medo.trim().length>10?2:0;
+  const potencial=Math.min(10,hasSecret+hasConflict+hasMedo+fieldsWithContent);
+
+  // engajamento: dilemas respondidos
+  const dilemaCount=Object.keys(p.dilemas||{}).length;
+  const engajamento=Math.min(10,Math.round(3+dilemaCount*1.75));
+
+  const global=Math.round((riqueza+coerScore+originalidade+potencial+engajamento)/5);
+
+  // completude
+  const allFields=['charName','charClass','charRace','charAge','charDesc','aparencia','historia','objetivo','medo','conexao','segredo','gancho'];
+  const filled=allFields.filter(k=>p[k]&&p[k].trim().length>3).length;
+  const completude=Math.round((filled/allFields.length)*100);
+  const completudeNote=completude>=85?'Ficha rica — excelente base narrativa.':completude>=60?'Boa base. Incentive mais detalhes em história e medo.':completude>=35?'Ficha básica. Considere uma conversa antes da sessão 1.':'Ficha muito rasa. Pouco material para trabalhar.';
+
+  return {riqueza:riqueza+'/10',coerencia:coerScore+'/10',originalidade:originalidade+'/10',potencial:potencial+'/10',engajamento:engajamento+'/10',global:global+'/10',completude,completudeNote};
+}
+
+function detectAIPatterns(p) {
+  const flags = [];
+  const tm = p.textMeta || {};
+  const textFields = ['char-historia','char-aparencia','char-objetivo','char-medo','char-conexao'];
+  
+  textFields.forEach(id=>{
+    const m=tm[id]||{};
+    const label=({
+      'char-historia':'História','char-aparencia':'Aparência','char-objetivo':'Objetivo',
+      'char-medo':'Medo/fraqueza','char-conexao':'Conexão'
+    })[id]||id;
+
+    // paste detectado explicitamente
+    if (m.pastes>=1) {
+      flags.push(`Campo <strong>${label}</strong>: ${m.pastes} colagem(ns) detectada(s). O texto pode ter sido gerado externamente e copiado.`);
+    }
+    // salto de caracteres grande sem edições proporcional (cola sem evento paste em alguns navegadores)
+    if (!m.pastes && m.jumps>=1 && m.edits<5) {
+      flags.push(`Campo <strong>${label}</strong>: crescimento abrupto de texto sem edições incrementais — possível colagem via atalho não capturado.`);
+    }
+    // texto muito longo com poucas edições (escreveu rapidissimo / colou)
+    if (m.finalLen>300 && m.edits<10 && m.pastes===0 && m.jumps===0) {
+      flags.push(`Campo <strong>${label}</strong>: ${m.finalLen} caracteres com apenas ${m.edits} evento(s) de edição — produção atipicamente rápida.`);
+    }
+  });
+
+  // análise de padrões linguísticos típicos de IA
+  const allText = [p.historia,p.objetivo,p.medo,p.conexao].filter(Boolean).join(' ');
+  const aiPhrases = ['desde criança','marcado para sempre','nunca mais seria o mesmo','uma jornada','destinos entrelaçados','sombras do passado','carregava o peso','determinado a','moldado por','trajetória'];
+  const found = aiPhrases.filter(ph=>allText.toLowerCase().includes(ph));
+  if (found.length>=3) {
+    flags.push(`Padrões linguísticos típicos de IA detectados na narrativa: "${found.slice(0,4).join('", "')}". Pode ser coincidência, mas vale atenção.`);
+  }
+
+  return flags;
+}
+
+function buildAnalysis(p,e) {
+  const {ordem:o,moral:m,coragem:c,motiv:mo,fe:f,coer:co}=e;
+  const blocks=[];
+
+  // Perfil de eixos central
+  blocks.push({title:'Perfil moral completo',cls:'',body: 'Este personagem '+getProfileText(e)});
+
+  // Coerência detalhada
+  if(co<25) blocks.push({title:'Coerência extrema',cls:'green',body:`Eixo de consistência em ${co}/100. Personagem de princípios inabaláveis — rara disciplina moral. Em jogo: pode ser visto como inflexível pelos aliados. Conflitos surgirão quando a situação exigir pragmatismo e ele se recusar a ceder. Não cria drama por fraqueza, mas por rigidez.`});
+  else if(co<45) blocks.push({title:'Alta coerência',cls:'green',body:`Consistência em ${co}/100. Age conforme acredita na esmagadora maioria das vezes. Tem uma identidade moral estável. Útil para o grupo como âncora ética, mas potencialmente previsível nas decisões.`});
+  else if(co<60) blocks.push({title:'Coerência moderada',cls:'',body:`Consistência em ${co}/100. Equilibrado — tem valores mas os negocia com a realidade. Esse perfil sugere um personagem que entende que princípios têm custo, e às vezes escolhe pagar, às vezes não. Mais humano e menos heroico.`});
+  else if(co<80) blocks.push({title:'Conflito interno significativo',cls:'red',body:`Consistência em ${co}/100. Este personagem sabe o que é certo para ele — e age contra isso com frequência. O gap entre valores e ações é material narrativo valioso: de onde vem essa desconexão? Trauma? Pressão social? Vício? Covardia? Esse é o arco que precisa ser explorado.`});
+  else blocks.push({title:'Conflito interno extremo',cls:'red',body:`Consistência em ${co}/100 — valor muito alto. Este personagem é definido pela contradição entre o que crê e o que faz. Isso pode indicar um passado que o quebrou, uma situação que o forçou a se trair repetidamente, ou uma psicologia fragmentada. É o tipo de personagem que gera cenas memoráveis de culpa, arrependimento ou colapso moral.`});
+
+  // Tensão moral/motivação
+  if(mo>65&&m<45) blocks.push({title:'Tensão: interesse × bondade',cls:'red',body:`Busca poder/interesse (${mo}/100) mas tem inclinação para o bem (${m}/100). Esse conflito específico — querer mais, mas sentir culpa por querer — é o motor de muitos personagens trágicos. O personagem provavelmente cria justificativas internas. Em jogo: observe quando ele racionaliza uma ação egoísta como "necessária para o bem maior".`});
+  if(mo<35&&m>60) blocks.push({title:'Tensão: ideal × realidade moral',cls:'',body:`Movido por ideais (${mo}/100) mas com inclinação sombria (${m}/100). O arquétipo do inquisidor — quer um bem, está disposto a meios questionáveis. Personagens assim são difíceis de vilificar e difíceis de heroicizar. Ótimo para narrativas moralmente ambíguas.`});
+
+  // Ordem/Caos extremos
+  if(o<15) blocks.push({title:'Leal extremo — risco de rigidez',cls:'',body:`Ordem em ${o}/100. A autoridade é quase um valor sagrado. Em jogo: esse personagem será testado quando a lei errar de forma gritante. Se ele hesitar em questionar, o grupo sentirá. Se ele não hesitar, algo mudou nele — explore isso.`});
+  else if(o>85) blocks.push({title:'Caótico extremo — risco de atrito',cls:'red',body:`Ordem em ${o}/100. Rejeita estrutura instintivamente. Em jogo: cria atrito em qualquer situação que exige coordenação, obediência ou sigilo. Útil para romper padrões, perigoso em missões que exigem disciplina.`});
+
+  // Fé extrema
+  if(f<20) blocks.push({title:'Devoção absoluta',cls:'',body:`Fé em ${f}/100. A divindade ou o destino são referencias centrais de todas as decisões. Em jogo: o que acontece quando o oráculo falha, o deus decepciona ou a missão sagrada conflita com o que é moralmente correto?`});
+  else if(f>80) blocks.push({title:'Ceticismo profundo',cls:'',body:`Ceticismo em ${f}/100. Não há espaço para o sobrenatural nesta psicologia. Em jogo: esse personagem será colocado à prova quando o inexplicável acontecer. A crise existencial do descrente confrontado com o divino é um arco poderoso.`});
+
+  // Coragem extrema
+  if(c<15) blocks.push({title:'Temeridade perigosa',cls:'red',body:`Coragem em ${c}/100. Age antes de pensar. Em combate é um ativo, em diplomacia é um risco. Use situações onde a impulsividade coloca o grupo em apuros — e observe como o personagem lida com as consequências de suas próprias ações precipitadas.`});
+  else if(c>85) blocks.push({title:'Excesso de cautela',cls:'',body:`Prudência em ${c}/100. Hesita diante de quase qualquer risco. Em jogo: cenários de urgência onde não há tempo para planejar forçarão uma escolha. Esse personagem pode paralisar em momentos críticos — ou surpreender a todos quando finalmente age.`});
+
+  if(blocks.length<3) blocks.push({title:'Perfil equilibrado',cls:'',body:`Os valores centrais estão próximos do meio em vários eixos. Personagem adaptável, difícil de prever. O desafio narrativo é criar situações-limite que revelem onde estão suas linhas vermelhas reais — porque com perfis moderados, elas só aparecem sob pressão extrema.`});
+
+  return blocks;
+}
+
+function buildHooks(p,e) {
+  const {ordem:o,moral:m,coragem:c,motiv:mo,fe:f,coer:co}=e;
+  const hooks=[];
+
+  if(p.gancho&&p.gancho.trim()) hooks.push(`<strong>Recado direto do jogador:</strong> "${esc(p.gancho)}"`);
+
+  if(p.segredo&&p.segredo.trim()) hooks.push(`O segredo guardado — independente de seu conteúdo — representa uma vulnerabilidade ativa. Introduza NPCs que <em>quase</em> descobrem, documentos que chegam perto, ou personagens que fazem perguntas perigosas. Não revele abruptamente: a tensão de estar à beira da exposição é mais valiosa que a revelação em si.`);
+
+  if(p.objetivo&&p.objetivo.trim()) hooks.push(`O objetivo central <em>("${esc(p.objetivo.substring(0,70))}${p.objetivo.length>70?'...':''}")</em> é um vetor de controle narrativo. Aproxime-o o suficiente para motivar, afaste-o antes que seja alcançado fácil. Considere colocá-lo em contradição direta com o objetivo de outro jogador em algum ponto.`);
+
+  if(p.medo&&p.medo.trim()) hooks.push(`A fraqueza declarada <em>("${esc(p.medo.substring(0,60))}${p.medo.length>60?'...':''}")</em> é uma ferramenta — use-a cirurgicamente, não constantemente. Uma cena por campanha onde essa fraqueza determina o resultado é mais efetivo do que usá-la como punição recorrente.`);
+
+  if(co>65) hooks.push(`A alta incoerência (${co}/100) sugere um evento de ruptura no passado — algo que forçou o personagem a agir contra seus valores pela primeira vez. Construa um arco que o aproxime de descobrir ou confrontar esse momento original. A resolução desse conflito interno pode ser o clímax pessoal mais poderoso que você pode oferecer.`);
+
+  if(mo>70&&m>55) hooks.push(`Motivado por interesse/poder (${mo}/100) com inclinação para o mal (${m}/100): ofereça uma oportunidade concreta de ganho que exija trair o grupo ou cruzar uma linha ética. O personagem está predisposto a dizer sim — a questão é o preço.`);
+
+  if(o>75&&c<35) hooks.push(`Caótico (${o}/100) e corajoso (${c}/100): essa combinação produz o personagem que age antes do grupo decidir. Crie deliberadamente uma cena de negociação diplomática sensível — e veja o que acontece quando ele intervém sozinho.`);
+
+  if(f<25) hooks.push(`A fé fervorosa (${f}/100) pode ser testada com uma revelação que coloca em xeque a divindade ou a missão sagrada. A crise de fé de um devoto absoluto é material de personagem de alto nível.`);
+
+  if(!hooks.length) hooks.push('Ficha com informações limitadas. Recomenda-se uma conversa individual com o jogador antes da primeira sessão para estabelecer ao menos um arco pessoal e um segredo. Sem esses vetores, é difícil criar momentos de narrativa personalizada.');
+
+  return hooks;
+}
+
+function toggleAcc(hdr) {
+  hdr.classList.toggle('open');
+  hdr.nextElementSibling.classList.toggle('open');
+}
+
+// ═══════════ UTILS ═══════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function setSyncStatus(state,lbl){document.getElementById('sync-dot').className='sync-dot '+state;document.getElementById('sync-lbl').textContent=lbl;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+// ═══════════ NAME TRIGGER ═══════════
+document.addEventListener('DOMContentLoaded',()=>{
+  const nameEl=document.getElementById('char-name');
+  nameEl.addEventListener('input',()=>{
+    checkNameTrigger();
+    autoSave();updateProgress();
+  });
+  nameEl.addEventListener('change',checkNameTrigger);
+
+  renderDilemas();
+  loadDraft();
+  initSliders();
+  initTextTracking();
+  drawRadar();
+  updateProgress();
+  initFB();
+});
+
+// ═══════════ FIREBASE ═══════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDQQp81eWmKv8-0p_T9X5FTrUdTVatVjis",
+  authDomain: "rpg-crideper.firebaseapp.com",
+  databaseURL: "https://rpg-crideper-default-rtdb.firebaseio.com",
+  projectId: "rpg-crideper",
+  storageBucket: "rpg-crideper.firebasestorage.app",
+  messagingSenderId: "729289618146",
+  appId: "1:729289618146:web:b6425fddbb25c7651ce4bb"
+};
+
+function initFB() {
+  const scripts = [
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js'
+  ];
+  let n = 0;
+  scripts.forEach(src => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => { if (++n === scripts.length) startFB(); };
+    s.onerror = () => setSyncStatus('err','sem rede');
+    document.head.appendChild(s);
+  });
+}
+function startFB() {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    firebaseReady = true;
+    setSyncStatus('ok','sincronizado');
+    if (isGM) listenPlayers();
+  } catch(e) { setSyncStatus('err','erro firebase'); console.error(e); }
+}
+</script>
+</body>
+</html>
